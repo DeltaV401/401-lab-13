@@ -60,7 +60,7 @@ users.methods.comparePassword = function(password) {
     .then( valid => valid ? this : null);
 };
 
-users.methods.generateTokengenerateToken = function() {
+users.methods.generateToken = function() {
   let token = {
     id: this._id,
     role: this.role,
@@ -69,7 +69,7 @@ users.methods.generateTokengenerateToken = function() {
 };
 
 users.methods.generateSecret = function() {
-  return (process.env.SECRET || 'changeit') + this.password;
+  return (process.env.SECRET || 'changeit');
 }
 
 module.exports = mongoose.model('users', users);
