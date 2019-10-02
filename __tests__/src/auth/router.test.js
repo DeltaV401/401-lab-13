@@ -30,6 +30,7 @@ describe('Auth Router', () => {
           .send(users[userType])
           .expect(200)
           .then(results => {
+            console.log(results.text);
             var token = jwt.decode(results.text);
             id = token.id;
             encodedToken = results.text;
