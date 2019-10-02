@@ -18,6 +18,21 @@ users.pre('save', async function() {
   }
 });
 
+users.statics.authenticateToken = async function(token) {
+  try {
+    let data = jwt.decode(token);
+    let user = await this.findById(data.id);
+    if(user && jwt.verify(token, user.generateSecret())) {
+      return user;
+    }
+    return null;
+  }
+  catch(err) {
+    console.warn(`This - ${err} - says you really goofed.`);
+    return null;
+  }
+}
+
 users.statics.createFromOauth = function(email) {
 
   if(! email) { return Promise.reject('Validation Error'); }
