@@ -33,7 +33,7 @@ users.statics.authenticateToken = async function(token) {
   }
 }
 
-users.statics.createFromOauth = function(email) {
+users.statics.createFromOauth = async function(email) {
 
   if(! email) { return Promise.reject('Validation Error'); }
 
