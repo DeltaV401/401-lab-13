@@ -66,7 +66,7 @@ users.methods.generateToken = function() {
     role: this.role,
   };
   let options = {
-    expiresIn: "15m",
+    expiresIn: process.env.TOKEN_EXPIRATION || 60,
   };
   return jwt.sign(token, process.env.SECRET, options);
 };

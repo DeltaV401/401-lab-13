@@ -1,6 +1,7 @@
 'use strict';
 
 const User = require('./users-model.js');
+const usedTokens = [];
 
 module.exports = (req, res, next) => {
   
@@ -34,6 +35,13 @@ module.exports = (req, res, next) => {
   }
 
   async function _authBearer(token) {
+    if(process.env.TOKEN_EXPIRATION) {
+      if(usedTokens.indexOf(token) >= 0) {
+        return _authError();
+      } else {
+        usedTokens.push(req.token);
+      }
+    }
     let user = await User.authenticateToken(token);
     return _authenticate(user);
   }
