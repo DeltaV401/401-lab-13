@@ -2,7 +2,7 @@
 
 process.env.SECRET="test";
 
-const supergoose = require('../../supergoose.js');
+require('../../supergoose.js');
 const auth = require('../../../src/auth/middleware.js');
 const Users = require('../../../src/auth/users-model.js');
 
@@ -16,7 +16,7 @@ beforeAll(async (done) => {
   const adminUser = await new Users(users.admin).save();
   const editorUser = await new Users(users.editor).save();
   const userUser = await new Users(users.user).save();
-  done()
+  done();
 });
 
 
@@ -25,7 +25,7 @@ describe('Auth Middleware', () => {
   // admin:password: YWRtaW46cGFzc3dvcmQ=
   // admin:foo: YWRtaW46Zm9v
   
-  let errorObject = "Invalid User ID/Password";
+  let errorObject = {"message": "Invalid User ID/Password", "status": 401, "statusMessage": "Unauthorized"};
   
   describe('user authentication', () => {
     
@@ -38,7 +38,7 @@ describe('Auth Middleware', () => {
           authorization: 'Basic YWRtaW46Zm9v',
         },
       };
-      let res = {};
+      let res = { set: () => {}};
       let next = jest.fn();
       let middleware = auth;
 
@@ -61,7 +61,10 @@ describe('Auth Middleware', () => {
       let middleware = auth;
 
       return middleware(req,res,next)
-        .then( () => {
+        .then(() => {
+          expect(req).toHaveProperty('user');
+          expect(req.user).toHaveProperty('username', 'admin');
+          expect(req).toHaveProperty('token');
           cachedToken = req.token;
           expect(next).toHaveBeenCalledWith();
         });

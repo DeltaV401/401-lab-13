@@ -1,6 +1,7 @@
 'use strict';
 
 const User = require('./users-model.js');
+const usedTokens = [];
 
 module.exports = (req, res, next) => {
   
@@ -10,6 +11,8 @@ module.exports = (req, res, next) => {
     switch( authType.toLowerCase() ) {
       case 'basic': 
         return _authBasic(authString);
+      case 'bearer':
+        return _authBearer(authString);
       default: 
         return _authError();
     }
@@ -31,6 +34,23 @@ module.exports = (req, res, next) => {
       .catch(next);
   }
 
+  async function _authBearer(token) {
+    if(process.env.TOKEN_EXPIRATION) {
+        try {
+        let {type} = jwt.decode(token);
+        if(type !== 'key' && usedTokens.indexOf(token) >= 0) {
+          return _authError();
+        } else {
+          usedTokens.push(req.token);
+        }
+      } catch(error) {
+        return _authError();
+      }
+    }
+    let user = await User.authenticateToken(token);
+    return _authenticate(user);
+  }
+
   function _authenticate(user) {
     if(user) {
       req.user = user;
@@ -43,7 +63,8 @@ module.exports = (req, res, next) => {
   }
   
   function _authError() {
-    next('Invalid User ID/Password');
+    res.set('WWW-Authenticate', 'basic');
+    next({status: 401, statusMessage: 'Unauthorized', message:'Invalid User ID/Password'});
   }
   
 };

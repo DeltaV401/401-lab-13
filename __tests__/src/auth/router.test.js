@@ -28,8 +28,10 @@ describe('Auth Router', () => {
       it('can create one', () => {
         return mockRequest.post('/signup')
           .send(users[userType])
+          .expect(200)
           .then(results => {
-            var token = jwt.verify(results.text, process.env.SECRET);
+            console.log(results.text);
+            var token = jwt.decode(results.text);
             id = token.id;
             encodedToken = results.text;
             expect(token.id).toBeDefined();
@@ -39,8 +41,9 @@ describe('Auth Router', () => {
       it('can signin with basic', () => {
         return mockRequest.post('/signin')
           .auth(users[userType].username, users[userType].password)
+          .expect(200)
           .then(results => {
-            var token = jwt.verify(results.text, process.env.SECRET);
+            var token = jwt.decode(results.text);
             expect(token.id).toEqual(id);
           });
       });

@@ -18,23 +18,34 @@ users.pre('save', async function() {
   }
 });
 
-users.statics.createFromOauth = function(email) {
+users.statics.authenticateToken = async function(token) {
+  try {
+    let data = jwt.decode(token);
+    let user = await this.findById(data.id);
+    if(user && jwt.verify(token, user.generateSecret())) {
+      return user;
+    }
+    return null;
+  }
+  catch(err) {
+    console.warn(`This - ${err} - says you really goofed.`);
+    return null;
+  }
+}
+
+users.statics.createFromOauth = async function(email) {
 
   if(! email) { return Promise.reject('Validation Error'); }
 
-  return this.findOne( {email} )
-    .then(user => {
-      if( !user ) { throw new Error('User Not Found'); }
-      console.log('Welcome Back', user.username);
-      return user;
-    })
-    .catch( error => {
-      console.log('Creating new user');
-      let username = email;
-      let password = 'none';
-      return this.create({username, password, email});
-    });
-
+  let user = await this.findOne({ email });
+  if(user) {
+    return user;
+  }
+  return this.create({
+    username: email,
+    password: Math.random() * Math.random(),
+    email,
+  });
 };
 
 users.statics.authenticateBasic = function(auth) {
@@ -49,14 +60,20 @@ users.methods.comparePassword = function(password) {
     .then( valid => valid ? this : null);
 };
 
-users.methods.generateToken = function() {
-
+users.methods.generateToken = function(type = 'user') {
   let token = {
     id: this._id,
     role: this.role,
   };
-
-  return jwt.sign(token, process.env.SECRET);
+  let options = {};
+  if(process.env.TOKEN_EXPIRATION && type !== 'key') {
+    options.expiresIn = process.env.TOKEN_EXPIRATION || 60;
+  };
+  return jwt.sign(token, process.env.SECRET, options);
 };
+
+users.methods.generateSecret = function() {
+  return (process.env.SECRET || 'changeit');
+}
 
 module.exports = mongoose.model('users', users);
