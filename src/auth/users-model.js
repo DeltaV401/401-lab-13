@@ -60,13 +60,14 @@ users.methods.comparePassword = function(password) {
     .then( valid => valid ? this : null);
 };
 
-users.methods.generateToken = function() {
+users.methods.generateToken = function(type = 'user') {
   let token = {
     id: this._id,
     role: this.role,
   };
-  let options = {
-    expiresIn: process.env.TOKEN_EXPIRATION || 60,
+  let options = {};
+  if(process.env.TOKEN_EXPIRATION && type !== 'key') {
+    options.expiresIn = process.env.TOKEN_EXPIRATION || 60;
   };
   return jwt.sign(token, process.env.SECRET, options);
 };

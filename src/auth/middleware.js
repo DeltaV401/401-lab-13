@@ -36,10 +36,15 @@ module.exports = (req, res, next) => {
 
   async function _authBearer(token) {
     if(process.env.TOKEN_EXPIRATION) {
-      if(usedTokens.indexOf(token) >= 0) {
+        try {
+        let {type} = jwt.decode(token);
+        if(type !== 'key' && usedTokens.indexOf(token) >= 0) {
+          return _authError();
+        } else {
+          usedTokens.push(req.token);
+        }
+      } catch(error) {
         return _authError();
-      } else {
-        usedTokens.push(req.token);
       }
     }
     let user = await User.authenticateToken(token);
